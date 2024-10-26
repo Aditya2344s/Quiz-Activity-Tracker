@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz</title>
+    <style>
+        /* Set background image and style */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background-image: url('ms.webp'); /* Replace with your background image URL */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #fff;
+        }
+
+        /* Overlay to make text more readable */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Adjust for dark overlay */
+            z-index: -1;
+        }
+
+        /* Center content */
+        .content {
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Style the iframe for the quiz form */
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Overlay for background effect -->
+    <div class="overlay"></div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <h1>Welcome to the Quiz</h1>
+        <p>Please stay on this page to complete the quiz.</p>
+        
+        <!-- Embedded Microsoft Form -->
+        <iframe src="https://forms.office.com/r/GeKvZdJek5" allow="camera"></iframe>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDJO4xe1G6L8VHkhwEMpFuMCkIMIlW7V0Y",
+            authDomain: "quiz-activity-tracker.firebaseapp.com",
+            projectId: "quiz-activity-tracker",
+            storageBucket: "quiz-activity-tracker.appspot.com",
+            messagingSenderId: "307679418605",
+            appId: "1:307679418605:web:cbe60e2927ac832d2054e4",
+            measurementId: "G-FPGNR9D27Y" // Optional
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Get student ID and fetch name
+        let studentId = prompt("Enter your student ID:");
+
+        // Fetch the student's name based on their ID
+        db.collection("students").where("studentId", "==", studentId).get()
+            .then((querySnapshot) => {
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((doc) => {
+                        const studentName = doc.data().name;
+                        alert("Welcome, " + studentName + "!"); // You can customize this as needed
+                    });
+                } else {
+                    alert("No student found with this ID.");
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching student name: ", error);
+            });
+
+        // Track when the page is inactive and active
+        document.addEventListener("visibilitychange", function() {
+            const status = document.hidden ? "left" : "returned";
+            const timestamp = new Date().toISOString();
+
+            // Log to Firebase
+            db.collection("page_activity").add({
+                studentId: studentId,
+                status: status,
+                timestamp: timestamp
+            }).then(() => {
+                console.log("Page activity logged:", status);
+            }).catch((error) => {
+                console.error("Error logging activity:", error);
+            });
+        });
+    </script>
+</body>
+</html>
